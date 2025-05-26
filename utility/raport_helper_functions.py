@@ -11,8 +11,16 @@ import seaborn as sns
 def load_recipe_data(filepath=DATAFILE_PATH, excluded_cols=EXCLUDED_COLUMNS) -> pd.DataFrame | None :
     try:
         df = pd.read_csv(filepath, encoding="ISO-8859-1")
+        #print(f"Loaded dataset with {len(df)} rows and {len(df.columns)} columns from {filepath}")
         if excluded_cols:
             df = df.drop(columns=excluded_cols, errors='ignore')
+
+        df = df.replace('N/A', np.nan)
+
+        # na_counts = df.isna().sum()
+        # print(na_counts[na_counts > 0])
+        #df['SugarScale'] = df['SugarScale'].replace({'Specific Gravity': 1.0, 'Plato': 0.0}).infer_objects(copy=False)
+        # print(df['BrewMethod'].unique())
         return df
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
@@ -138,14 +146,85 @@ def _generate_histogram(dataset: pd.DataFrame, column_name: str, bins=30) -> Non
 def generate_histograms_for_dataset(dataset: pd.DataFrame, bins=30) -> None:
     try:
         for column in dataset.columns:
-            if not pd.api.types.is_numeric_dtype(dataset[column]):
+            if column not in dataset.select_dtypes(include=['number']).columns:
+                # print(f"Kolumna '{column}' nie jest typu numerycznego, pomijanie jej.")
                 continue
+            # print(f"Generowanie histogramu dla kolumny: {column}")
             _generate_histogram(dataset, column, bins)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
+def generate_boxplots_for_dataset(dataset: pd.DataFrame) -> None:
+    try:
+        for column in dataset.columns:
+            if column not in dataset.select_dtypes(include=['number']).columns:
+                # print(f"Kolumna '{column}' nie jest typu numerycznego, pomijanie jej.")
+                continue
 
-def generate_spearman_matrix(dataset: pd.DataFrame, top_n: int = 10) -> None:
+            _generate_boxplot(dataset, column)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+def _generate_boxplot(df: pd.DataFrame, column: str) -> None:
+
+    series = df[column].dropna()
+
+    q1 = series.quantile(0.25)
+    q2 = series.quantile(0.5)
+    q3 = series.quantile(0.75)
+    iqr = q3 - q1
+    lower_bound = q1 - 1.5 * iqr
+    upper_bound = q3 + 1.5 * iqr
+    outliers = series[(series < lower_bound) | (series > upper_bound)]
+
+    counts, bin_edges = np.histogram(series, bins='auto')
+    max_bin_index = np.argmax(counts)
+    mode_range = (bin_edges[max_bin_index], bin_edges[max_bin_index + 1])
+
+    fig = plt.figure(figsize=(18, 10))
+    gs = gridspec.GridSpec(1, 2, width_ratios=[1, 1])
+
+    # Boxplot (pionowy)
+    ax_box = fig.add_subplot(gs[0])
+    ax_box.boxplot(series, vert=True, patch_artist=True, boxprops=dict(facecolor='lightblue'))
+    ax_box.set_title(f'Boxplot: {column}')
+    ax_box.set_ylabel(column)
+
+    # Tabela
+    ax_table = fig.add_subplot(gs[1])
+    ax_table.axis('off')
+    table_data = [
+        ["Przedział wartości występujących najczęściej", f"{mode_range[0]:.2f} – {mode_range[1]:.2f}"],
+        ["Mediana", f"{q2:.2f}"],
+        ["Liczba punktów oddalonych", f"{len(outliers)}"],
+        ["Procent punktów oddalonych w zestawie", f"{len(outliers) / len(series) * 100:.2f}%"],
+    ]
+    table = ax_table.table(
+        cellText=table_data,
+        colLabels=["Statystyka", "Wartość"],
+        cellLoc='center',
+        loc='center'
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(11)
+    table.scale(1.2, 1.5)
+
+    fig.suptitle(f'Analiza atrybutu: {column}', fontsize=14)
+    fig.tight_layout()
+    plt.show()
+    print("\n")
+
+    # print(f"\nAnaliza atrybutu: {column}")
+    # print(f"Przedział wartości występujących najczęściej: {mode_range[0]:.2f} – {mode_range[1]:.2f}")
+    # print(f"Mediana: {q2:.2f}")
+    # print(f"Liczba punktów oddalonych: {len(outliers)}")
+    # print(f"Procent punktów oddalonych w zestawie: {len(outliers) / len(series) * 100:.2f}%")
+
+
+
+
+
+def generate_spearman_matrix(dataset: pd.DataFrame, top_n: int = 20, target: str = "StyleID") -> None:
     try:
         numerical_df = dataset.select_dtypes(include=['number'])
         correlations = numerical_df.corr(method="spearman")
@@ -153,6 +232,21 @@ def generate_spearman_matrix(dataset: pd.DataFrame, top_n: int = 10) -> None:
         plt.figure(figsize=(12, 10))
         sns.heatmap(correlations, annot=True, fmt=".2f", cmap="coolwarm", square=True)
         plt.title("Macierz korelacji Spearmana")
+        plt.show()
+
+
+        #Korelacja względem atrybutu celu
+        correlations = numerical_df.corr(method="spearman")[target].drop(target)
+        correlations = correlations.sort_values()
+
+        plt.figure(figsize=(10, len(correlations) * 0.5))
+        sns.barplot(x=correlations.values, y=correlations.index, palette="coolwarm", orient="h", hue=correlations.index, legend=False)
+        plt.axvline(x=0, color='gray', linestyle='--', linewidth=1)
+        plt.title(f"Korelacje Spearmana względem '{target}'")
+        plt.xlabel("Współczynnik korelacji Spearmana")
+        plt.ylabel("Atrybuty")
+        plt.grid(True, axis='x', linestyle='--', alpha=0.6)
+        plt.tight_layout()
         plt.show()
 
 
@@ -176,6 +270,7 @@ def generate_spearman_matrix(dataset: pd.DataFrame, top_n: int = 10) -> None:
         # top_attr = mean_abs_corr.index[0]
         # print(f"\nNajbardziej globalnie skorelowany atrybut: {top_attr} (średnia |korelacja| = {mean_abs_corr.iloc[0]:.2f})")
 
+        # Sprawdzenie korelacji dla atrybutu celu
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
@@ -183,4 +278,5 @@ def generate_spearman_matrix(dataset: pd.DataFrame, top_n: int = 10) -> None:
 
 # recipe_data = load_recipe_data()
 # generate_histograms_for_dataset(recipe_data, bins=30)
-# #generate_spearman_matrix(recipe_data)
+# generate_boxplots_for_dataset(recipe_data)
+# generate_spearman_matrix(recipe_data)
