@@ -224,7 +224,7 @@ def _generate_boxplot(df: pd.DataFrame, column: str) -> None:
 
 
 
-def generate_spearman_matrix(dataset: pd.DataFrame, top_n: int = 10, target: str = "ABV") -> None:
+def generate_spearman_matrix(dataset: pd.DataFrame, top_n: int = 20, target: str = "StyleID") -> None:
     try:
         numerical_df = dataset.select_dtypes(include=['number'])
         correlations = numerical_df.corr(method="spearman")
@@ -235,22 +235,22 @@ def generate_spearman_matrix(dataset: pd.DataFrame, top_n: int = 10, target: str
         plt.show()
 
 
-        # Korelacja względem atrybutu celu
-        # correlations = numerical_df.corr(method="spearman")[target].drop(target)
-        # correlations = correlations.sort_values()
-        #
-        # plt.figure(figsize=(10, len(correlations) * 0.5))
-        # sns.barplot(x=correlations.values, y=correlations.index, palette="coolwarm", orient="h")
-        # plt.axvline(x=0, color='gray', linestyle='--', linewidth=1)
-        # plt.title(f"Korelacje Spearmana względem '{target}'")
-        # plt.xlabel("Współczynnik korelacji Spearmana")
-        # plt.ylabel("Atrybuty")
-        # plt.grid(True, axis='x', linestyle='--', alpha=0.6)
-        # plt.tight_layout()
-        # plt.show()
+        #Korelacja względem atrybutu celu
+        correlations = numerical_df.corr(method="spearman")[target].drop(target)
+        correlations = correlations.sort_values()
+
+        plt.figure(figsize=(10, len(correlations) * 0.5))
+        sns.barplot(x=correlations.values, y=correlations.index, palette="coolwarm", orient="h", hue=correlations.index, legend=False)
+        plt.axvline(x=0, color='gray', linestyle='--', linewidth=1)
+        plt.title(f"Korelacje Spearmana względem '{target}'")
+        plt.xlabel("Współczynnik korelacji Spearmana")
+        plt.ylabel("Atrybuty")
+        plt.grid(True, axis='x', linestyle='--', alpha=0.6)
+        plt.tight_layout()
+        plt.show()
 
 
-        #Wypisanie wyników korelacji
+        # Wypisanie wyników korelacji
         # corr_pairs = (
         #     correlations.where(np.triu(np.ones(correlations.shape), k=1).astype(bool))
         #     .stack()
