@@ -26,8 +26,6 @@ def load_recipe_data(filepath=DATAFILE_PATH, excluded_cols=EXCLUDED_COLUMNS) -> 
         print(f"An unexpected error occurred: {e}")
         return None
 
-
-
 def _generate_histogram(dataset: pd.DataFrame, column_name: str, bins=30) -> None:
     if column_name not in dataset.columns:
         print(f"Column '{column_name}' does not exist in DataFrame.")
@@ -141,8 +139,6 @@ def _generate_histogram(dataset: pd.DataFrame, column_name: str, bins=30) -> Non
     plt.show()
     print("\n")
 
-
-
 def generate_histograms_for_dataset(dataset: pd.DataFrame, bins=30) -> None:
     try:
         for column in dataset.columns:
@@ -219,10 +215,6 @@ def _generate_boxplot(df: pd.DataFrame, column: str) -> None:
     # print(f"Mediana: {q2:.2f}")
     # print(f"Liczba punktów oddalonych: {len(outliers)}")
     # print(f"Procent punktów oddalonych w zestawie: {len(outliers) / len(series) * 100:.2f}%")
-
-
-
-
 
 def generate_spearman_matrix(dataset: pd.DataFrame, top_n: int = 20, target: str = "StyleID") -> None:
     try:
