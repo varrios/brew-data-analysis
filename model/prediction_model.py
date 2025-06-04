@@ -31,8 +31,20 @@ dataset = load_recipe_data()
 
 df = initial_dataset_preparation(dataset)
 features = [
-    'OG', 'FG', 'ABV', 'IBU', 'Color', 'BoilSize', 'BoilTime',
-    'Efficiency', 'MashThickness', 'SugarScale', 'BrewMethod'
+    'OG',
+    'FG',
+    'ABV',
+    'IBU',
+    'Color',
+    'BoilSize',
+    'BoilTime',
+    'PrimaryTemp',
+    'Size(L)',
+    'Efficiency',
+    'MashThickness',
+    'SugarScale',
+    'BrewMethod',
+    'BoilGravity',
 ]
 
 X_train, X_test, y_train, y_test = split_data(df, features)

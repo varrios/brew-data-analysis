@@ -23,15 +23,10 @@ def initial_dataset_preparation(dataset: pd.DataFrame) -> pd.DataFrame:
             'PitchRate'
         ]
     )
-    # Fill columns with less than 50% values missing with median values
-    dataset.fillna({
-        'BoilGravity': dataset['BoilGravity'].median(),
-        'PrimaryTemp': dataset['PrimaryTemp'].median(),
-        'MashThickness': dataset['MashThickness'].median()
-    }, inplace=True)
 
     # Remove outliers with IRQ
     #dataset = _remove_outliers_iqr(dataset)
+    dataset = _fill_missing_values(dataset)
 
     # Group styles of beers according to map
     dataset['StyleGroup'] = dataset['Style'].map(BEER_STYLE_MAP)
@@ -55,6 +50,16 @@ def _remove_outliers_iqr(dataset: pd.DataFrame) -> pd.DataFrame:
         IQR = Q3 - Q1
         dataset = dataset[(dataset[col] >= Q1 - 1.5 * IQR) & (dataset[col] <= Q3 + 1.5 * IQR)]
     return dataset
+
+def _fill_missing_values(dataset: pd.DataFrame) -> pd.DataFrame:
+    # Fill columns with <50% values missing with median values
+    dataset.fillna({
+        'BoilGravity': dataset['BoilGravity'].median(),
+        'PrimaryTemp': dataset['PrimaryTemp'].median(),
+        'MashThickness': dataset['MashThickness'].median()
+    }, inplace=True)
+    return dataset
+
 
 
 
