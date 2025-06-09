@@ -5,6 +5,8 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import accuracy_score, f1_score, classification_report, confusion_matrix
 from constants import DATAFILE_PATH, CLEAN_DATAFILE_PATH
 from utility.raport_helper_functions import *
@@ -81,4 +83,36 @@ def drop_missing_values(dataset: pd.DataFrame) -> pd.DataFrame:
     print(f"Liczba wierszy z brakującymi wartościami: {missing_rows} / {len(dataset)}")
 
     dataset.dropna(subset=['BoilGravity', 'PrimaryTemp', 'MashThickness'], inplace=True)
+    return dataset
+
+
+def fill_missing_values_regression(dataset: pd.DataFrame) -> pd.DataFrame:
+    missing_rows = dataset[['BoilGravity', 'PrimaryTemp', 'MashThickness']].isna().any(axis=1).sum()
+    print(f"Liczba wierszy z brakującymi wartościami: {missing_rows} / {len(dataset)}")
+
+    labels = ['BoilGravity', 'PrimaryTemp', 'MashThickness']
+
+    for label in labels:
+        df_train = dataset.copy()
+        df_train.dropna(subset=label, inplace=True)
+        
+        df_train.drop([l for l in labels if l != label], axis=1, inplace=True)
+
+        X_train = df_train.drop([label], axis=1)
+
+        y_train = df_train[label]
+
+        regression_model = RandomForestRegressor()
+        regression_model.fit(X_train, y_train)
+
+        nulls = dataset[label].isnull()
+
+        X_missing = dataset[nulls].copy()
+
+        X_missing.drop(labels, axis=1, inplace=True)
+
+        predictions = regression_model.predict(X_missing)
+
+        dataset.loc[nulls, label] = predictions
+
     return dataset
