@@ -72,3 +72,34 @@ def visualize_clusters(df, features):
 
     plt.title('Wizualizacja klastrów (PCA)')
     plt.show()
+
+
+def plot_cluster_means_separate(df, features):
+    cluster_means = df.groupby('Cluster')[features].mean()
+
+    # Plot for Color
+    plt.figure(figsize=(10, 5))
+    sns.barplot(x=cluster_means.index, y=cluster_means['Color'], palette='viridis')
+    plt.title('Średnia wartość Color w klastrach')
+    plt.xlabel('Numer klastra')
+    plt.ylabel('Średnia wartość Color')
+    plt.savefig('raports\\plots\\klaster_color.png')
+    plt.show()
+
+    # Plot for IBU
+    plt.figure(figsize=(10, 5))
+    sns.barplot(x=cluster_means.index, y=cluster_means['IBU'], palette='viridis')
+    plt.title('Średnia wartość IBU w klastrach')
+    plt.xlabel('Numer klastra')
+    plt.ylabel('Średnia wartość IBU')
+    plt.savefig('raports\\plots\\klaster_ibu.png')
+    plt.show()
+
+    # Plot for ABV
+    plt.figure(figsize=(10, 5))
+    sns.barplot(x=cluster_means.index, y=cluster_means['ABV'], palette='viridis')
+    plt.title('Średnia wartość ABV w klastrach')
+    plt.xlabel('Numer klastra')
+    plt.ylabel('Średnia wartość ABV')
+    plt.savefig('raports\\plots\\klaster_abv.png')
+    plt.show()

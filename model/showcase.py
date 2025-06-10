@@ -28,6 +28,8 @@ def clusterize_and_classify():
     df = perform_clustering(df, features, n_clusters=6)
     visualize_clusters(df[features_2 + ['Cluster']], features_2 + ['Cluster'])
 
+    plot_cluster_means_separate(df, features_2)
+
     cluster_stats = df.groupby('Cluster')[features_2].agg(['mean', 'median', 'std', 'min', 'max'])
 
     # Print the statistics
