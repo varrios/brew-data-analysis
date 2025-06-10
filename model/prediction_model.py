@@ -1,6 +1,7 @@
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, balanced_accuracy_score
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, balanced_accuracy_score, \
+    ConfusionMatrixDisplay
 from sklearn.preprocessing import StandardScaler
 from model.prepare_data import *
 from sklearn.model_selection import train_test_split
@@ -16,12 +17,18 @@ def train_model(X_train, y_train):
     model.fit(X_train, y_train)
     return model
 
-def evaluate_model(model, X_test, y_test):
+def evaluate_model(model, X_test, y_test, plot_cm=True):
     y_pred = model.predict(X_test)
     print("Balanced Accuracy:", balanced_accuracy_score(y_test, y_pred))
     print("Accuracy:", accuracy_score(y_test, y_pred))
     print(classification_report(y_test, y_pred))
-    print(confusion_matrix(y_test, y_pred))
+    cm = confusion_matrix(y_test, y_pred)
+    print(cm)
+    if not plot_cm:
+        return
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    disp.plot().figure_.savefig('confusion_matrix.png')
+    plt.show()
 
 def predict(model, features, sample):
     X_sample = pd.DataFrame([sample], columns=features)

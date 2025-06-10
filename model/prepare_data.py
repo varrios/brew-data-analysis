@@ -14,8 +14,6 @@ def group_by_style(dataset: pd.DataFrame) -> pd.DataFrame:
 
 def initial_dataset_preparation(dataset: pd.DataFrame) -> pd.DataFrame:
 
-    #dataset = group_by_style(dataset)
-
     # Remove outliers with IRQ
     #dataset = _remove_outliers_iqr(dataset)
 
