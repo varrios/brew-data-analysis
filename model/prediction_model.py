@@ -27,7 +27,7 @@ def evaluate_model(model, X_test, y_test, plot_cm=True):
     if not plot_cm:
         return
     disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot().figure_.savefig('confusion_matrix.png')
+    disp.plot().figure_.savefig('raports\\plots\\confusion_matrix.png')
     plt.show()
 
 def predict(model, features, sample):
