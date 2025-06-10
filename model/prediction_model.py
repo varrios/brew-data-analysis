@@ -7,9 +7,9 @@ from model.prepare_data import *
 from sklearn.model_selection import GridSearchCV
 
 
-def split_data(df, features):
+def split_data(df, features, label_column='StyleGroup'):
     X = df[features]
-    y = df['StyleGroup']
+    y = df[label_column]
     return train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 def train_model(X_train, y_train):
@@ -21,6 +21,7 @@ def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
     print("Accuracy:", accuracy_score(y_test, y_pred))
     print(classification_report(y_test, y_pred))
+    print(confusion_matrix(y_test, y_pred))
 
 def predict(model, features, sample):
     X_sample = pd.DataFrame([sample], columns=features)

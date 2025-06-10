@@ -32,7 +32,7 @@ def initial_dataset_preparation(dataset: pd.DataFrame) -> pd.DataFrame:
     #         'PitchRate'
     #     ]
     # )
-    dataset = group_by_style(dataset)
+    #dataset = group_by_style(dataset)
 
     # Remove outliers with IRQ
     #dataset = _remove_outliers_iqr(dataset)
