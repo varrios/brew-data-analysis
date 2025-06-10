@@ -1,10 +1,9 @@
-import random
-
-from sklearn.tree import export_text
-from constants import CLEAN_DATAFILE_PATH
-from utility.raport_helper_functions import load_recipe_data
+from sklearn.cluster import KMeans
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, balanced_accuracy_score
+from sklearn.preprocessing import StandardScaler
 from model.prepare_data import *
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
 
 
 def split_data(df, features, label_column='StyleGroup'):
@@ -19,6 +18,7 @@ def train_model(X_train, y_train):
 
 def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
+    print("Balanced Accuracy:", balanced_accuracy_score(y_test, y_pred))
     print("Accuracy:", accuracy_score(y_test, y_pred))
     print(classification_report(y_test, y_pred))
     print(confusion_matrix(y_test, y_pred))
@@ -27,19 +27,41 @@ def predict(model, features, sample):
     X_sample = pd.DataFrame([sample], columns=features)
     return model.predict(X_sample)[0]
 
-# def optimize_model(X_train, y_train):
-#     param_grid = {
-#         'n_estimators': [100, 200, 300],
-#         'max_depth': [None, 10, 20, 30],
-#         # 'min_samples_split': [2, 5, 10],
-#         # 'min_samples_leaf': [1, 2, 4],
-#         # 'bootstrap': [True, False]
-#     }
-#
-#     rf = RandomForestClassifier(random_state=42)
-#     grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=3, n_jobs=-1, verbose=2, scoring='accuracy')
-#
-#     grid_search.fit(X_train, y_train)
-#
-#     print("Najlepsze parametry:", grid_search.best_params_)
-#     return grid_search.best_estimator_
+
+def perform_clustering(df, features, n_clusters=5):
+    """Klasteryzuje dane i dodaje kolumnę z przynależnością do klastra."""
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(df[features])
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    df['Cluster'] = kmeans.fit_predict(X_scaled)
+
+    return df
+
+def visualize_clusters(df, features):
+    """Wizualizuje klastry w przestrzeni 2D PCA."""
+    if len(df) > 1000:
+        df = df.sample(frac=0.1, random_state=42)
+
+    # pca = PCA(n_components=2)
+    # X_pca = pca.fit_transform(StandardScaler().fit_transform(df[features]))
+
+    X_pca = df[features].to_numpy()
+
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(projection='3d')
+    sc = ax.scatter(
+        X_pca[:, 0],  # PC1 (x-axis)
+        X_pca[:, 1],  # PC2 (y-axis)
+        X_pca[:, 2],  # PC3 (z-axis)
+        c=df['Cluster'],  # Color by cluster labels
+        s=10,  # Marker size
+        marker='o',  # Simpler marker
+        alpha=0.7,  # Slightly transparent
+        edgecolors='none',
+        cmap='viridis'
+    )
+    cbar = plt.colorbar(sc, ax=ax, pad=0.1)
+    cbar.set_label('Cluster Number')
+
+    plt.title('Wizualizacja klastrów (PCA)')
+    plt.show()
