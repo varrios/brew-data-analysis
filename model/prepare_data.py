@@ -26,8 +26,6 @@ def initial_dataset_preparation(dataset: pd.DataFrame) -> pd.DataFrame:
     dataset['SugarScale'] = dataset['SugarScale'].map(sugar_scale_map)
     dataset['BrewMethod'] = dataset['BrewMethod'].map(brew_method_map)
 
-    # Save to seperate .csv file
-    dataset.to_csv(CLEAN_DATAFILE_PATH, index=False)
     return dataset
 
 def _remove_outliers_iqr(dataset: pd.DataFrame) -> pd.DataFrame:
