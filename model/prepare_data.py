@@ -5,31 +5,37 @@ import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import accuracy_score, f1_score, classification_report, confusion_matrix
 from constants import DATAFILE_PATH, CLEAN_DATAFILE_PATH
 from utility.raport_helper_functions import *
 from constants import BEER_STYLE_MAP
 
 
-def initial_dataset_preparation(dataset: pd.DataFrame) -> pd.DataFrame:
+def group_by_style(dataset: pd.DataFrame) -> pd.DataFrame:
     # Drop recipes with unknown styles
-
     dataset.dropna(subset=['Style'], inplace=True)
-    # Drop columns with the majority of N/A values (>50%)
-    dataset = dataset.drop(
-        columns=[
-            'PrimingMethod',
-            'PrimingAmount',
-            'PitchRate'
-        ]
-    )
-
-    # Remove outliers with IRQ
-    #dataset = _remove_outliers_iqr(dataset)
-    dataset = _fill_missing_values(dataset)
 
     # Group styles of beers according to map
     dataset['StyleGroup'] = dataset['Style'].map(BEER_STYLE_MAP)
+
+    return dataset
+
+
+def initial_dataset_preparation(dataset: pd.DataFrame) -> pd.DataFrame:
+    # # Drop columns with the majority of N/A values (>50%)
+    # dataset = dataset.drop(
+    #     columns=[
+    #         'PrimingMethod',
+    #         'PrimingAmount',
+    #         'PitchRate'
+    #     ]
+    # )
+    dataset = group_by_style(dataset)
+
+    # Remove outliers with IRQ
+    #dataset = _remove_outliers_iqr(dataset)
 
     # Change nominal values to numerical
     sugar_scale_map = {'Specific Gravity': 0, 'Plato': 1}
@@ -51,8 +57,19 @@ def _remove_outliers_iqr(dataset: pd.DataFrame) -> pd.DataFrame:
         dataset = dataset[(dataset[col] >= Q1 - 1.5 * IQR) & (dataset[col] <= Q3 + 1.5 * IQR)]
     return dataset
 
-def _fill_missing_values(dataset: pd.DataFrame) -> pd.DataFrame:
-    # Fill columns with <50% values missing with median values
+
+def fill_missing_values_group_median(dataset: pd.DataFrame) -> pd.DataFrame:
+    for col in ['BoilGravity', 'PrimaryTemp', 'MashThickness']:
+        dataset[col] = dataset[col].fillna(
+            dataset.groupby('StyleGroup')[col].transform('median')
+        )
+    return dataset
+
+
+def fill_missing_values_global_median(dataset: pd.DataFrame) -> pd.DataFrame:
+    missing_rows = dataset[['BoilGravity', 'PrimaryTemp', 'MashThickness']].isna().any(axis=1).sum()
+    print(f"Liczba wierszy z brakującymi wartościami: {missing_rows} / {len(dataset)}")
+
     dataset.fillna({
         'BoilGravity': dataset['BoilGravity'].median(),
         'PrimaryTemp': dataset['PrimaryTemp'].median(),
@@ -61,5 +78,41 @@ def _fill_missing_values(dataset: pd.DataFrame) -> pd.DataFrame:
     return dataset
 
 
+def drop_missing_values(dataset: pd.DataFrame) -> pd.DataFrame:
+    missing_rows = dataset[['BoilGravity', 'PrimaryTemp', 'MashThickness']].isna().any(axis=1).sum()
+    print(f"Liczba wierszy z brakującymi wartościami: {missing_rows} / {len(dataset)}")
+
+    dataset.dropna(subset=['BoilGravity', 'PrimaryTemp', 'MashThickness'], inplace=True)
+    return dataset
 
 
+def fill_missing_values_regression(dataset: pd.DataFrame) -> pd.DataFrame:
+    missing_rows = dataset[['BoilGravity', 'PrimaryTemp', 'MashThickness']].isna().any(axis=1).sum()
+    print(f"Liczba wierszy z brakującymi wartościami: {missing_rows} / {len(dataset)}")
+
+    labels = ['BoilGravity', 'PrimaryTemp', 'MashThickness']
+
+    for label in labels:
+        df_train = dataset.copy()
+        df_train.dropna(subset=label, inplace=True)
+        
+        df_train.drop([l for l in labels if l != label], axis=1, inplace=True)
+
+        X_train = df_train.drop([label], axis=1)
+
+        y_train = df_train[label]
+
+        regression_model = RandomForestRegressor()
+        regression_model.fit(X_train, y_train)
+
+        nulls = dataset[label].isnull()
+
+        X_missing = dataset[nulls].copy()
+
+        X_missing.drop(labels, axis=1, inplace=True)
+
+        predictions = regression_model.predict(X_missing)
+
+        dataset.loc[nulls, label] = predictions
+
+    return dataset

@@ -1,8 +1,10 @@
 import random
 
+from sklearn.tree import export_text
 from constants import CLEAN_DATAFILE_PATH
 from utility.raport_helper_functions import load_recipe_data
 from model.prepare_data import *
+from sklearn.model_selection import GridSearchCV
 
 
 def split_data(df, features):
@@ -24,45 +26,19 @@ def predict(model, features, sample):
     X_sample = pd.DataFrame([sample], columns=features)
     return model.predict(X_sample)[0]
 
-
-
-
-dataset = load_recipe_data()
-
-df = initial_dataset_preparation(dataset)
-features = [
-    'OG',
-    'FG',
-    'ABV',
-    'IBU',
-    'Color',
-    'BoilSize',
-    'BoilTime',
-    'PrimaryTemp',
-    'Size(L)',
-    'Efficiency',
-    'MashThickness',
-    'SugarScale',
-    'BrewMethod',
-    'BoilGravity',
-]
-
-X_train, X_test, y_train, y_test = split_data(df, features)
-
-model = train_model(X_train, y_train)
-
-evaluate_model(model, X_test, y_test)
-
-TEST_RUNS = 20
-
-for _ in range(TEST_RUNS):
-    random_sample = X_test.sample(1)
-    example_features = random_sample.iloc[0].to_dict()
-    example_true_group = y_test.loc[random_sample.index[0]]
-    predicted_group = predict(model, features, example_features)
-
-    print(f"============ PRZYKŁAD #{_} ===========")
-    print("Przykład cech:", example_features)
-    print("Prawdziwa grupa:", example_true_group)
-    print("Przewidziana grupa:", predicted_group)
-    print("=======================================")
+# def optimize_model(X_train, y_train):
+#     param_grid = {
+#         'n_estimators': [100, 200, 300],
+#         'max_depth': [None, 10, 20, 30],
+#         # 'min_samples_split': [2, 5, 10],
+#         # 'min_samples_leaf': [1, 2, 4],
+#         # 'bootstrap': [True, False]
+#     }
+#
+#     rf = RandomForestClassifier(random_state=42)
+#     grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=3, n_jobs=-1, verbose=2, scoring='accuracy')
+#
+#     grid_search.fit(X_train, y_train)
+#
+#     print("Najlepsze parametry:", grid_search.best_params_)
+#     return grid_search.best_estimator_
