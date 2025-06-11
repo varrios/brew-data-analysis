@@ -26,7 +26,8 @@ def clusterize_and_classify():
 
     features_2 = ['Color', 'IBU', 'ABV']
     df = perform_clustering(df, features, n_clusters=6)
-    visualize_clusters(df[features_2 + ['Cluster']], features_2 + ['Cluster'])
+    # visualize_clusters(df[features_2 + ['Cluster']], features_2 + ['Cluster'])
+    visualize_clusters_2d(df[features_2 + ['Cluster']], features_2)
 
     plot_cluster_means_separate(df, features_2)
 

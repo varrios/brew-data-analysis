@@ -1,4 +1,5 @@
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, balanced_accuracy_score, \
     ConfusionMatrixDisplay
@@ -71,6 +72,30 @@ def visualize_clusters(df, features):
     cbar.set_label('Cluster Number')
 
     plt.title('Wizualizacja klastrów (PCA)')
+    plt.show()
+
+
+def visualize_clusters_2d(df, features):
+    if len(df) > 1000:
+        df = df.sample(frac=0.1, random_state=42)
+
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(StandardScaler().fit_transform(df[features]))
+
+    plt.figure(figsize=(10, 6))
+    scatter = plt.scatter(
+        X_pca[:, 0], X_pca[:, 1],
+        c=df['Cluster'],
+        cmap='viridis',
+        s=10,
+        alpha=0.7
+    )
+    plt.colorbar(scatter, label='Cluster Number')
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    plt.title('Wizualizacja klastrów (PCA 2D)')
+    plt.tight_layout()
+    plt.savefig('raports\\plots\\pca_clusters_2d.png')
     plt.show()
 
 
