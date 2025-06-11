@@ -53,6 +53,7 @@ def clusterize_and_classify():
     model = train_model(X_train, y_train)
 
     evaluate_model(model, X_test, y_test)
+    plot_feature_importances(model, features)
 
 
 

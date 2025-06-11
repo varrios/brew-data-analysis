@@ -103,3 +103,16 @@ def plot_cluster_means_separate(df, features):
     plt.ylabel('Średnia wartość ABV')
     plt.savefig('raports\\plots\\klaster_abv.png')
     plt.show()
+
+def plot_feature_importances(model, features):
+    importances = model.feature_importances_
+    feat_imp = pd.Series(importances, index=features).sort_values(ascending=False)
+
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=feat_imp.values, y=feat_imp.index, palette='viridis')
+    plt.title('Ważność cech w modelu Random Forest')
+    plt.xlabel('Ważność')
+    plt.ylabel('Cechy')
+    plt.tight_layout()
+    plt.savefig('raports\\plots\\feature_importance.png')
+    plt.show()
